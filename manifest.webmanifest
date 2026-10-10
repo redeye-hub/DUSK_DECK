@@ -1,0 +1,13 @@
+{
+  "name": "Dusk Deck",
+  "short_name": "Dusk Deck",
+  "description": "Vaporwave music player for your own files",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1b0a4a",
+  "theme_color": "#1b0a4a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
