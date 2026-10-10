@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dusk Deck</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b0a4a">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Karla:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #f3e6ff;
+  --bg-2: #ffd9ec;
+  --ink: #2a1250;
+  --ink-soft: #5b3e8a;
+  --pink: #ff4fb8;
+  --cyan: #12c9c0;
+  --win: #e9dcff;
+  --win-edge: #2a1250;
+  --title-a: #3a1d8f;
+  --title-b: #ff4fb8;
+  --display: "Unbounded", "Arial Black", Impact, sans-serif;
+  --body: "Karla", "Helvetica Neue", Arial, sans-serif;
+  --pixel: "VT323", "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #150836; --bg-2: #2a0f58; --ink: #f6e9ff; --ink-soft: #c9aef0;
+    --pink: #ff5cc8; --cyan: #3ef2e4;
+    --win: #2a1458; --win-edge: #f6e9ff; --title-a: #5b2fd1; --title-b: #ff5cc8;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #150836; --bg-2: #2a0f58; --ink: #f6e9ff; --ink-soft: #c9aef0;
+  --pink: #ff5cc8; --cyan: #3ef2e4;
+  --win: #2a1458; --win-edge: #f6e9ff; --title-a: #5b2fd1; --title-b: #ff5cc8;
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; min-height: 100%;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  color: var(--ink);
+  font-family: var(--body); font-size: 17px; line-height: 1.5;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+.scene {
+  position: relative; overflow: hidden; text-align: center;
+  padding: 44px 20px 150px;
+  background: linear-gradient(180deg, #1b0a4a 0%, #6a1fa8 40%, #ff4fb8 74%, #ffb08a 100%);
+  color: #fff;
+}
+.sun {
+  position: absolute; left: 50%; bottom: 96px; width: min(46vw, 280px); aspect-ratio: 1;
+  transform: translateX(-50%); border-radius: 50%;
+  background: linear-gradient(180deg, #ffe66d 0%, #ff9a5a 45%, #ff3fa4 100%);
+  -webkit-mask: repeating-linear-gradient(180deg, #000 0 11px, transparent 11px 14px);
+  mask: repeating-linear-gradient(180deg, #000 0 11px, transparent 11px 14px);
+  box-shadow: 0 0 100px 16px rgba(255, 79, 184, .5);
+}
+.floor {
+  position: absolute; left: -50%; right: -50%; bottom: 0; height: 150px;
+  background: #1b0a4a; border-top: 2px solid var(--cyan);
+  box-shadow: 0 -8px 36px rgba(62, 242, 228, .45);
+  overflow: hidden; perspective: 240px;
+}
+.grid {
+  position: absolute; left: 0; right: 0; top: 0; height: 400%;
+  transform-origin: 50% 0; transform: rotateX(62deg);
+  background-image:
+    linear-gradient(var(--cyan) 2px, transparent 2px),
+    linear-gradient(90deg, var(--cyan) 2px, transparent 2px);
+  background-size: 56px 56px; opacity: .7;
+}
+body.playing .grid { animation: drive 1.4s linear infinite; }
+@keyframes drive { to { background-position: 0 56px, 0 0; } }
+.scene h1 {
+  position: relative; z-index: 2; margin: 0;
+  font-family: var(--display); font-weight: 800;
+  font-size: clamp(2.2rem, 8vw, 4.6rem); line-height: .95; letter-spacing: -.02em;
+  background: linear-gradient(180deg, #ffffff 0%, #e9c9ff 45%, #7ee7ff 50%, #ffb7e6 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(3px 3px 0 #ff2f9e) drop-shadow(6px 6px 0 rgba(27,10,74,.6));
+}
+.scene .jp { position: relative; z-index: 2; margin: 12px 0 0; font-family: var(--pixel); font-size: 1.6rem; color: #fff3a8; letter-spacing: .12em; }
+
+main { max-width: 1040px; margin: 0 auto; padding: 36px 20px 64px; display: grid; gap: 36px; grid-template-columns: 1fr 1fr; align-items: start; }
+@media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+.win { background: var(--win); border: 3px solid var(--win-edge); box-shadow: 8px 8px 0 var(--pink); min-width: 0; }
+.win.alt { box-shadow: 8px 8px 0 var(--cyan); }
+.bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 6px 10px; color: #fff; font-family: var(--pixel); font-size: 1.35rem; line-height: 1.1;
+  background: linear-gradient(90deg, var(--title-a), var(--title-b));
+}
+.bar .dots { display: flex; gap: 5px; }
+.bar .dots i { width: 14px; height: 14px; background: #c0c0e8; border: 2px solid #1b0a4a; display: block; }
+.body { padding: 20px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 18px; cursor: pointer; border: 0;
+  font-family: var(--display); font-weight: 500; font-size: .82rem;
+  background: #c0c0e8; color: #1b0a4a;
+  box-shadow: inset -3px -3px 0 #6b6b9a, inset 3px 3px 0 #fff, 3px 3px 0 #1b0a4a;
+}
+.btn:active { box-shadow: inset 3px 3px 0 #6b6b9a, inset -3px -3px 0 #fff; transform: translate(3px, 3px); }
+.btn[aria-pressed="true"] { background: var(--pink); color: #fff; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--pink); color: #fff; box-shadow: inset -3px -3px 0 #b3267f, inset 3px 3px 0 #ffa6dd, 3px 3px 0 #1b0a4a; }
+
+.screen { background: #0c0525; color: var(--cyan); padding: 16px; border: 3px solid var(--win-edge); font-family: var(--pixel); font-size: 1.4rem; line-height: 1.15; }
+.screen .title { color: #fff; font-size: 2rem; overflow-wrap: anywhere; }
+.screen .meta { color: var(--cyan); }
+canvas#viz { display: block; width: 100%; height: 84px; margin: 12px 0 8px; background: #150836; }
+.times { display: flex; justify-content: space-between; }
+.seek, .vol { width: 100%; accent-color: var(--pink); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.vol-wrap { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-family: var(--pixel); font-size: 1.4rem; }
+.vol-wrap input { flex: 1; }
+
+.drop { border: 3px dashed var(--ink-soft); padding: 18px; text-align: center; margin-bottom: 14px; background: var(--bg); }
+.drop.over { border-color: var(--pink); background: var(--bg-2); }
+.drop p { margin: 0 0 10px; color: var(--ink-soft); }
+.tracks { list-style: none; margin: 0; padding: 0; border: 3px solid var(--win-edge); background: var(--bg); max-height: 420px; overflow-y: auto; }
+.tracks li { display: flex; align-items: stretch; }
+.tracks li + li { border-top: 2px dashed var(--ink-soft); }
+.tracks .pick { all: unset; box-sizing: border-box; flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; cursor: pointer; }
+.tracks .pick:hover { background: var(--bg-2); }
+.tracks .pick:focus-visible { outline: 3px solid var(--cyan); outline-offset: -3px; }
+.tracks .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracks .len { font-family: var(--pixel); font-size: 1.3rem; flex: none; }
+.tracks li.current .pick { background: var(--ink); color: var(--bg); }
+.tracks .del { all: unset; box-sizing: border-box; flex: none; padding: 0 14px; cursor: pointer; font-family: var(--pixel); font-size: 1.5rem; color: var(--ink-soft); }
+.tracks .del:hover { color: var(--pink); }
+.tracks .del:focus-visible { outline: 3px solid var(--cyan); outline-offset: -3px; }
+.tracks li.current .del { background: var(--ink); color: var(--bg); }
+.empty { padding: 22px 16px; color: var(--ink-soft); text-align: center; }
+.status { margin: 12px 0 0; font-family: var(--pixel); font-size: 1.35rem; color: var(--ink-soft); min-height: 1.4em; }
+.lib-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; font-family: var(--pixel); font-size: 1.35rem; color: var(--ink-soft); }
+.linkbtn { all: unset; cursor: pointer; text-decoration: underline; color: var(--ink-soft); }
+.linkbtn:hover { color: var(--pink); }
+.linkbtn:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) { body.playing .grid { animation: none; } }
+</style>
+</head>
+<body>
+
+<header class="scene">
+  <div class="sun" aria-hidden="true"></div>
+  <div class="floor" aria-hidden="true"><div class="grid"></div></div>
+  <h1>Dusk Deck</h1>
+  <p class="jp" lang="ja">ダスク・デッキ</p>
+</header>
+
+<main>
+  <section class="win" aria-labelledby="np">
+    <div class="bar"><span>player.exe</span><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+    <div class="body">
+      <h2 id="np" style="position:absolute;left:-9999px">Player</h2>
+      <div class="screen">
+        <div class="title" id="title">Nothing loaded</div>
+        <div class="meta" id="meta">Add music to start</div>
+        <canvas id="viz" width="600" height="84" aria-hidden="true"></canvas>
+        <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+      </div>
+      <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" style="margin-top:12px" disabled>
+      <div class="row">
+        <button class="btn" id="prev" type="button" disabled>Prev</button>
+        <button class="btn primary" id="play" type="button" disabled>Play</button>
+        <button class="btn" id="next" type="button" disabled>Next</button>
+        <button class="btn" id="shuffle" type="button" aria-pressed="false">Shuffle</button>
+        <button class="btn" id="repeat" type="button" aria-pressed="false">Repeat: off</button>
+      </div>
+      <div class="vol-wrap">
+        <label for="vol">Vol</label>
+        <input class="vol" id="vol" type="range" min="0" max="100" value="80">
+      </div>
+    </div>
+  </section>
+
+  <section class="win alt" aria-labelledby="lib">
+    <div class="bar"><span>library.dir</span><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+    <div class="body">
+      <h2 id="lib" style="position:absolute;left:-9999px">Library</h2>
+      <div class="drop" id="drop">
+        <p>Drop audio files here, or pick them from your device. Files stay on this device.</p>
+        <button class="btn primary" id="add" type="button">Add music</button>
+        <input id="file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.oga,.flac,.aac,.opus,.weba" multiple hidden>
+      </div>
+      <ul class="tracks" id="tracks" aria-label="Tracks"></ul>
+      <div class="lib-head">
+        <span id="count">0 tracks</span>
+        <button class="linkbtn" id="clear" type="button" hidden>Clear library</button>
+      </div>
+      <p class="status" id="status" role="status"></p>
+    </div>
+  </section>
+</main>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var audio = $("audio"), listEl = $("tracks"), statusEl = $("status");
+  var tracks = [];
+  var cur = -1, shuffle = false, repeat = 0;
+  var db = null, persistent = false, objUrl = null, seeking = false;
+
+  function fmt(s) {
+    if (!isFinite(s) || s < 0) s = 0;
+    s = Math.floor(s);
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+  function cleanName(n) { return n.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").trim() || n; }
+  function say(msg) { statusEl.textContent = msg || ""; }
+  function isAudio(f) {
+    return (f.type && f.type.indexOf("audio/") === 0) || /\.(mp3|m4a|wav|ogg|oga|flac|aac|opus|weba)$/i.test(f.name);
+  }
+
+  function openDB() {
+    return new Promise(function (resolve) {
+      try {
+        var req = indexedDB.open("dusk-deck", 1);
+        req.onupgradeneeded = function () { req.result.createObjectStore("tracks", { keyPath: "id" }); };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+        req.onblocked = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  }
+  function dbAll() {
+    return new Promise(function (resolve) {
+      try {
+        var r = db.transaction("tracks").objectStore("tracks").getAll();
+        r.onsuccess = function () { resolve(r.result || []); };
+        r.onerror = function () { resolve([]); };
+      } catch (e) { resolve([]); }
+    });
+  }
+  function dbPut(t) {
+    return new Promise(function (resolve) {
+      if (!db) return resolve(false);
+      try {
+        var tx = db.transaction("tracks", "readwrite");
+        tx.objectStore("tracks").put({ id: t.id, name: t.name, type: t.type, blob: t.blob, dur: t.dur, added: t.added });
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = tx.onabort = function () { resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  }
+  function dbDel(id) {
+    if (!db) return;
+    try { db.transaction("tracks", "readwrite").objectStore("tracks").delete(id); } catch (e) {}
+  }
+  function dbClear() {
+    if (!db) return;
+    try { db.transaction("tracks", "readwrite").objectStore("tracks").clear(); } catch (e) {}
+  }
+
+  function render() {
+    listEl.innerHTML = "";
+    if (!tracks.length) {
+      var li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "No music yet. Add files to build your library.";
+      listEl.appendChild(li);
+    }
+    tracks.forEach(function (t, i) {
+      var li = document.createElement("li");
+      if (i === cur) li.className = "current";
+      var pick = document.createElement("button");
+      pick.type = "button"; pick.className = "pick";
+      var nm = document.createElement("span"); nm.className = "name"; nm.textContent = t.name;
+      var ln = document.createElement("span"); ln.className = "len"; ln.textContent = t.dur ? fmt(t.dur) : "--:--";
+      pick.appendChild(nm); pick.appendChild(ln);
+      pick.addEventListener("click", function () { load(i, true); });
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "del"; del.textContent = "x";
+      del.setAttribute("aria-label", "Remove " + t.name);
+      del.addEventListener("click", function () { removeTrack(i); });
+      li.appendChild(pick); li.appendChild(del);
+      listEl.appendChild(li);
+    });
+    $("count").textContent = tracks.length + (tracks.length === 1 ? " track" : " tracks");
+    $("clear").hidden = !tracks.length;
+    var has = tracks.length > 0;
+    ["play", "prev", "next"].forEach(function (id) { $(id).disabled = !has; });
+  }
+
+  function setPlayingUI(on) {
+    document.body.classList.toggle("playing", on);
+    $("play").textContent = on ? "Pause" : "Play";
+  }
+  function load(i, autoplay) {
+    if (i < 0 || i >= tracks.length) return;
+    cur = i;
+    var t = tracks[i];
+    if (objUrl) URL.revokeObjectURL(objUrl);
+    objUrl = URL.createObjectURL(t.blob);
+    audio.src = objUrl;
+    $("title").textContent = t.name;
+    $("meta").textContent = "Track " + (i + 1) + " of " + tracks.length;
+    $("seek").disabled = false;
+    $("seek").value = 0;
+    $("cur").textContent = "0:00";
+    $("dur").textContent = t.dur ? fmt(t.dur) : "0:00";
+    render();
+    if ("mediaSession" in navigator) {
+      try { navigator.mediaSession.metadata = new MediaMetadata({ title: t.name, artist: "Dusk Deck" }); } catch (e) {}
+    }
+    if (autoplay) play();
+  }
+  function play() {
+    if (cur < 0 && tracks.length) { load(0, false); }
+    if (cur < 0) return;
+    ensureAudioGraph();
+    if (actx && actx.state === "suspended") actx.resume();
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () { say("Could not play this file. The format may not be supported."); setPlayingUI(false); });
+  }
+  function pause() { audio.pause(); }
+  function nextIndex(dir) {
+    if (!tracks.length) return -1;
+    if (shuffle && tracks.length > 1) {
+      var n; do { n = Math.floor(Math.random() * tracks.length); } while (n === cur);
+      return n;
+    }
+    return (cur + dir + tracks.length) % tracks.length;
+  }
+  function removeTrack(i) {
+    var t = tracks[i];
+    dbDel(t.id);
+    var wasCur = i === cur;
+    tracks.splice(i, 1);
+    if (wasCur) {
+      audio.pause(); audio.removeAttribute("src"); audio.load();
+      if (objUrl) { URL.revokeObjectURL(objUrl); objUrl = null; }
+      cur = -1; setPlayingUI(false);
+      $("title").textContent = "Nothing loaded"; $("meta").textContent = tracks.length ? "Pick a track" : "Add music to start";
+      $("seek").disabled = true; $("seek").value = 0; $("cur").textContent = "0:00"; $("dur").textContent = "0:00";
+    } else if (i < cur) { cur -= 1; }
+    render();
+  }
+
+  audio.addEventListener("play", function () { setPlayingUI(true); });
+  audio.addEventListener("pause", function () { setPlayingUI(false); });
+  audio.addEventListener("loadedmetadata", function () {
+    if (cur >= 0 && isFinite(audio.duration)) {
+      $("dur").textContent = fmt(audio.duration);
+      if (!tracks[cur].dur) { tracks[cur].dur = audio.duration; dbPut(tracks[cur]); render(); }
+    }
+  });
+  audio.addEventListener("timeupdate", function () {
+    $("cur").textContent = fmt(audio.currentTime);
+    if (!seeking && isFinite(audio.duration) && audio.duration > 0) {
+      $("seek").value = Math.round(audio.currentTime / audio.duration * 1000);
+    }
+  });
+  audio.addEventListener("ended", function () {
+    if (repeat === 2) { audio.currentTime = 0; play(); return; }
+    var atEnd = cur === tracks.length - 1 && !shuffle;
+    if (atEnd && repeat === 0) { setPlayingUI(false); return; }
+    load(nextIndex(1), true);
+  });
+  audio.addEventListener("error", function () { if (cur >= 0) say("Could not play this file. The format may not be supported."); });
+
+  $("play").addEventListener("click", function () { audio.paused ? play() : pause(); });
+  $("next").addEventListener("click", function () { var n = nextIndex(1); if (n >= 0) load(n, true); });
+  $("prev").addEventListener("click", function () {
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    var n = nextIndex(-1); if (n >= 0) load(n, true);
+  });
+  $("shuffle").addEventListener("click", function () {
+    shuffle = !shuffle; this.setAttribute("aria-pressed", String(shuffle));
+  });
+  $("repeat").addEventListener("click", function () {
+    repeat = (repeat + 1) % 3;
+    this.textContent = "Repeat: " + ["off", "all", "one"][repeat];
+    this.setAttribute("aria-pressed", String(repeat > 0));
+  });
+  $("vol").addEventListener("input", function () { audio.volume = this.value / 100; });
+  audio.volume = 0.8;
+
+  var seekEl = $("seek");
+  seekEl.addEventListener("input", function () {
+    seeking = true;
+    if (isFinite(audio.duration)) $("cur").textContent = fmt(audio.duration * seekEl.value / 1000);
+  });
+  seekEl.addEventListener("change", function () {
+    if (isFinite(audio.duration)) audio.currentTime = audio.duration * seekEl.value / 1000;
+    seeking = false;
+  });
+
+  if ("mediaSession" in navigator) {
+    try {
+      navigator.mediaSession.setActionHandler("play", play);
+      navigator.mediaSession.setActionHandler("pause", pause);
+      navigator.mediaSession.setActionHandler("previoustrack", function () { $("prev").click(); });
+      navigator.mediaSession.setActionHandler("nexttrack", function () { $("next").click(); });
+    } catch (e) {}
+  }
+
+  function readDuration(blob) {
+    return new Promise(function (resolve) {
+      var a = new Audio(), u = URL.createObjectURL(blob), done = false;
+      function fin(d) { if (done) return; done = true; URL.revokeObjectURL(u); resolve(d); }
+      a.preload = "metadata";
+      a.onloadedmetadata = function () { fin(isFinite(a.duration) ? a.duration : 0); };
+      a.onerror = function () { fin(0); };
+      setTimeout(function () { fin(0); }, 4000);
+      a.src = u;
+    });
+  }
+  function addFiles(fileList) {
+    var files = Array.prototype.filter.call(fileList, isAudio);
+    var skipped = fileList.length - files.length;
+    if (!files.length) { say("No audio files found in that selection."); return; }
+    say("Adding " + files.length + (files.length === 1 ? " file..." : " files..."));
+    var saved = 0, failed = 0;
+    files.reduce(function (chain, f) {
+      return chain.then(function () {
+        return readDuration(f).then(function (d) {
+          var t = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            name: cleanName(f.name), type: f.type || "audio/mpeg", blob: f, dur: d, added: Date.now()
+          };
+          tracks.push(t);
+          render();
+          return dbPut(t).then(function (ok) { if (ok) saved++; else failed++; });
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      var msg = "Added " + files.length + (files.length === 1 ? " track." : " tracks.");
+      if (skipped) msg += " Skipped " + skipped + " non-audio " + (skipped === 1 ? "file." : "files.");
+      if (!persistent) msg += " Library will not be kept after you close this page.";
+      else if (failed) msg += " " + failed + " could not be saved (storage may be full).";
+      say(msg);
+    });
+  }
+
+  var fileInput = $("file");
+  $("add").addEventListener("click", function () { fileInput.click(); });
+  fileInput.addEventListener("change", function () { if (fileInput.files.length) addFiles(fileInput.files); fileInput.value = ""; });
+  var drop = $("drop");
+  ["dragenter", "dragover"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); if (ev === "drop" || e.target === document.documentElement) drop.classList.remove("over"); });
+  });
+  document.addEventListener("drop", function (e) {
+    drop.classList.remove("over");
+    if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  $("clear").addEventListener("click", function () {
+    if (!confirm("Remove all tracks from this library?")) return;
+    dbClear();
+    audio.pause(); audio.removeAttribute("src"); audio.load();
+    if (objUrl) { URL.revokeObjectURL(objUrl); objUrl = null; }
+    tracks = []; cur = -1; setPlayingUI(false);
+    $("title").textContent = "Nothing loaded"; $("meta").textContent = "Add music to start";
+    $("seek").disabled = true; $("seek").value = 0; $("cur").textContent = "0:00"; $("dur").textContent = "0:00";
+    render(); say("Library cleared.");
+  });
+
+  var actx = null, analyser = null, data = null, graphReady = false;
+  var canvas = $("viz"), c2 = canvas.getContext("2d");
+  function ensureAudioGraph() {
+    if (graphReady) return;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      actx = new AC();
+      var src = actx.createMediaElementSource(audio);
+      analyser = actx.createAnalyser();
+      analyser.fftSize = 128;
+      data = new Uint8Array(analyser.frequencyBinCount);
+      src.connect(analyser); analyser.connect(actx.destination);
+      graphReady = true;
+    } catch (e) { analyser = null; }
+  }
+  function draw() {
+    requestAnimationFrame(draw);
+    var w = canvas.width, h = canvas.height;
+    c2.clearRect(0, 0, w, h);
+    var bars = 40, gap = 3, bw = (w - gap * (bars - 1)) / bars;
+    var g = c2.createLinearGradient(0, h, 0, 0);
+    g.addColorStop(0, "#3ef2e4"); g.addColorStop(1, "#ff5cc8");
+    c2.fillStyle = g;
+    var live = analyser && !audio.paused;
+    if (live) analyser.getByteFrequencyData(data);
+    for (var i = 0; i < bars; i++) {
+      var v = live ? data[Math.floor(i * (data.length * 0.75) / bars)] / 255 : 0.04;
+      var bh = Math.max(3, v * h);
+      c2.fillRect(i * (bw + gap), h - bh, bw, bh);
+    }
+  }
+  draw();
+
+  render();
+  openDB().then(function (d) {
+    db = d;
+    if (!db) { say("Storage is unavailable here. Tracks last until you close this page."); return; }
+    persistent = true;
+    dbAll().then(function (rows) {
+      rows.sort(function (a, b) { return (a.added || 0) - (b.added || 0); });
+      tracks = rows;
+      render();
+      if (rows.length) say("Loaded " + rows.length + (rows.length === 1 ? " saved track." : " saved tracks."));
+    });
+  });
+})();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
